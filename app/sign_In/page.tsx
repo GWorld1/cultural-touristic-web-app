@@ -11,11 +11,11 @@ export default function InstagramLogin() {
           <div className="absolute top-0 left-0 z-10 transform -rotate-6">
             <div className="relative w-48 h-80 rounded-3xl overflow-hidden border-4 border-white shadow-lg">
               <Image
-                src="/placeholder.svg?height=320&width=192"
+                src="/images/road.jpg?height=320&width=192"
                 alt="Instagram post"
                 width={192}
                 height={320}
-                className="object-cover"
+                className="object-contain"
               />
               <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white/80 rounded-full w-32 h-10"></div>
               <div className="absolute bottom-4 right-4 text-red-500">
@@ -38,10 +38,10 @@ export default function InstagramLogin() {
           <div className="absolute top-10 left-20 z-20">
             <div className="relative w-56 h-96 rounded-3xl overflow-hidden border-4 border-white shadow-lg">
               <Image
-                src="/placeholder.svg?height=384&width=224"
+                src="/images/download.jpg?height=384&width=224"
                 alt="Instagram post"
-                width={224}
-                height={384}
+                width={192}
+                height={320}
                 className="object-cover"
               />
               <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white/80 rounded-full w-36 h-10"></div>
@@ -65,7 +65,7 @@ export default function InstagramLogin() {
           <div className="absolute top-0 right-0 z-0 transform rotate-6">
             <div className="relative w-48 h-80 rounded-3xl overflow-hidden border-4 border-white shadow-lg">
               <Image
-                src="/placeholder.svg?height=320&width=192"
+                src="/images/OIP.jpg?height=320&width=192"
                 alt="Instagram post"
                 width={192}
                 height={320}
@@ -99,14 +99,14 @@ export default function InstagramLogin() {
       <div className="w-full md:w-1/2 max-w-md flex flex-col items-center">
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
-            <h1 className="font-serif text-5xl">360 Site Tour</h1>
+            <h1 className="font-serif text-5xl">360&deg; Site Tour</h1>
           </div>
 
           <form className="space-y-4">
             <div>
               <input
                 type="text"
-                placeholder="Phone number, username, or email"
+                placeholder="Email"
                 className="w-full px-2 py-2 border border-gray-300 rounded-sm text-sm"
               />
             </div>
@@ -119,7 +119,7 @@ export default function InstagramLogin() {
             </div>
             <button
               type="submit"
-              className="w-full bg-blue-500 text-white py-1.5 rounded-lg font-medium text-sm"
+              className="w-full bg-gradient-to-r from-green-500 via-red-500 to-yellow-500 text-white py-1.5 rounded-lg font-medium text-sm"
             >
               Log in
             </button>

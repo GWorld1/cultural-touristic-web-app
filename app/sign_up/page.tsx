@@ -6,12 +6,12 @@ export default function InstagramSignup() {
     <div className="flex items-center justify-center min-h-screen bg-gray-50">
       <div className="w-full max-w-md bg-white p-8 border border-gray-300">
         <div className="text-center mb-6">
-          <h1 className="font-serif text-5xl">Site Tour</h1>
+          <h1 className="font-serif text-5xl">360&deg; Site Tour</h1>
         </div>
 
         <div className="text-center mb-6">
           <p className="text-gray-500 font-medium text-sm">
-            Interested in touristic attractions, sign up.
+            Interested in touristic attractions with greate dynamic viewing, sign up.
           </p>
         </div>
 
@@ -86,16 +86,16 @@ export default function InstagramSignup() {
 
           <button
             type="submit"
-            className="w-full bg-blue-500 text-white py-1.5 rounded font-medium"
+            className="w-full bg-gradient-to-r from-green-500 via-red-500 to-yellow-500 text-white py-1.5 rounded font-medium"
           >
             Sign up
           </button>
           <div className="mt-8 text-center text-sm">
-                      <span className="text-gray-700">Already have an account?</span>{" "}
-                      <Link href="/sign_In" className="text-blue-500 font-semibold">
-                        Sign In
-                      </Link>
-                    </div>
+            <span className="text-gray-700">Already have an account?</span>{" "}
+            <Link href="/sign_In" className="text-blue-500 font-semibold">
+              Sign In
+            </Link>
+          </div>
         </form>
       </div>
     </div>
