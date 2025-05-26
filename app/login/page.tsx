@@ -266,7 +266,7 @@ export default function InstagramLogin() {
 
           <div className="mt-8 text-center text-sm">
             <span className="text-gray-700">Don&apos;t have an account?</span>{" "}
-            <Link href="/sign_up" className="text-blue-500 font-semibold">
+            <Link href="/signup" className="text-blue-500 font-semibold">
               Sign up
             </Link>
           </div>
