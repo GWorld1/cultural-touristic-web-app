@@ -4,34 +4,32 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation"; // For redirection
-import axios, { AxiosError } from "axios"; // Import axios and AxiosError type
+import { useRouter } from "next/navigation";
+import axios, { AxiosError } from "axios";
+import Cookies from 'js-cookie'; // Import js-cookie
 
 export default function InstagramLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(""); // State for error messages
-  const [message, setMessage] = useState(""); // State for success messages (less common for login, but good to have)
-  const [loading, setLoading] = useState(false); // State for loading indicator
-  const router = useRouter(); // Initialize the router
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   async function handleSignIn(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault(); // Prevent default form submission behavior
+    e.preventDefault();
 
-    // Clear previous messages
     setError("");
     setMessage("");
-    setLoading(true); // Set loading to true
+    setLoading(true);
 
     try {
-      // Basic client-side input validation
       if (!email || !password) {
         setError("Email and password are required.");
         setLoading(false);
         return;
       }
 
-      // Make API call to your backend's login endpoint
       const response = await axios.post(
         "http://localhost:5000/api/auth/login", // IMPORTANT: REPLACE WITH YOUR ACTUAL BACKEND LOGIN URL
         {
@@ -40,80 +38,74 @@ export default function InstagramLogin() {
         }
       );
 
-      // If the request is successful (Axios handles 2xx status codes by default)
       setMessage(response.data.message || "Login successful!");
       console.log("Login successful:", response.data);
 
-      // Store the token and user info in localStorage
-      // Ensure localStorage is available (only in browser environment)
+      // --- Store the token in a cookie instead of localStorage ---
+      // For simplicity, we'll store the JWT string in a client-readable cookie.
+      // Set an expiry (e.g., 1 day) for the cookie. Adjust as needed.
+      Cookies.set('jwtToken', response.data.token, { expires: 1, secure: process.env.NODE_ENV === 'production' }); // 'secure' flag for HTTPS in production
+      
+      // Keep user and sessionId in localStorage for client-side access if needed,
+      // as they are not security-sensitive in the same way the JWT itself is.
+      // If your backend sets sessionId as an HttpOnly cookie, you wouldn't store it here.
       if (typeof window !== "undefined") {
-        localStorage.setItem("jwtToken", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
         localStorage.setItem("sessionId", response.data.sessionId);
       }
 
-      // Redirect to a protected dashboard or home page
-      router.push("/dashboard"); // Redirect to your dashboard page
+      router.push("/dashboard");
 
-      // Clear the form (optional, could also redirect immediately)
       setEmail("");
       setPassword("");
     } catch (err: unknown) {
-      // Explicitly type as unknown
       console.error("Login error:", err);
 
       if (axios.isAxiosError(err)) {
-        // Type guard for Axios errors
-        const axiosError = err; // err is now inferred as AxiosError due to the type guard
+        const axiosError = err;
 
         if (axiosError.response) {
-          // Server responded with a status code outside 2xx
           switch (axiosError.response.status) {
-            case 400: // From your backend: if (!email || !password)
+            case 400:
               setError(
                 (axiosError.response.data as { error?: string })?.error ||
                   "Bad Request: Missing login data."
               );
               break;
-            case 401: // From your backend: 'Email not verified' or 'Invalid credentials'
+            case 401:
               setError(
                 (axiosError.response.data as { error?: string })?.error ||
                   "Authentication Failed: Invalid credentials or email not verified."
               );
               break;
-            case 500: // From your backend: general server error
+            case 500:
               setError(
                 (axiosError.response.data as { error?: string })?.error ||
                   "Server Error: Failed to login. Please try again later."
               );
               break;
             default:
-              // Any other unexpected status from the server
               setError(
                 (axiosError.response.data as { error?: string })?.error ||
                   `An unexpected error occurred (Status: ${axiosError.response.status}).`
               );
           }
         } else if (axiosError.request) {
-          // The request was made but no response was received (e.g., network error, server unreachable)
           setError(
             "Network Error: No response from server. Please check your internet connection."
           );
         } else {
-          // Something happened in setting up the request that triggered an Error
           setError(
             "Client-side Error: Unable to send login request. Please try again."
           );
         }
       } else if (err instanceof Error) {
-        // Handle generic JavaScript Errors
         setError(`An unexpected error occurred: ${err.message}`);
       } else {
-        // Fallback for truly unknown error types
         setError("An unknown error occurred during login.");
       }
     } finally {
-      setLoading(false); // Always set loading to false after the request
+      setLoading(false);
     }
   }
 
