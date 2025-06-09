@@ -1,3 +1,4 @@
+import { UserProfile } from './../database/schema';
 /**
  * Authentication Store using Zustand
  * 
@@ -27,6 +28,7 @@ export const useAuthStore = create<AuthStore>()(
     (set, get) => ({
       // Initial state
       user: null,
+      UserProfile: null,
       token: null,
       sessionId: null,
       isAuthenticated: false,
@@ -63,7 +65,7 @@ export const useAuthStore = create<AuthStore>()(
           return false;
         } catch (error) {
           set({ 
-            error: 'An unexpected error occurred during login', 
+            error: `An unexpected error occurred during login: ${error}`, 
             isLoading: false 
           });
           return false;
@@ -96,7 +98,7 @@ export const useAuthStore = create<AuthStore>()(
           return false;
         } catch (error) {
           set({ 
-            error: 'An unexpected error occurred during registration', 
+            error: `An unexpected error occurred during registration: ${error}`, 
             isLoading: false 
           });
           return false;
@@ -155,6 +157,7 @@ export const useAuthStore = create<AuthStore>()(
           if (response.data) {
             set({
               user: response.data.user,
+              UserProfile: response.data.user,
               isAuthenticated: true,
               isLoading: false,
               error: null
@@ -162,7 +165,7 @@ export const useAuthStore = create<AuthStore>()(
           }
         } catch (error) {
           set({ 
-            error: 'Failed to get user data', 
+            error: `Failed to get user data: ${error}`, 
             isLoading: false 
           });
         }
@@ -187,7 +190,7 @@ export const useAuthStore = create<AuthStore>()(
           return true;
         } catch (error) {
           set({ 
-            error: 'Failed to update profile', 
+            error: `Failed to update profile: ${error}`, 
             isLoading: false 
           });
           return false;
@@ -212,7 +215,7 @@ export const useAuthStore = create<AuthStore>()(
           return true;
         } catch (error) {
           set({ 
-            error: 'Failed to request password reset', 
+            error: `Failed to request password reset: ${error}`, 
             isLoading: false 
           });
           return false;
@@ -237,7 +240,7 @@ export const useAuthStore = create<AuthStore>()(
           return true;
         } catch (error) {
           set({ 
-            error: 'Failed to reset password', 
+            error: `Failed to reset password: ${error}`, 
             isLoading: false 
           });
           return false;
@@ -262,7 +265,7 @@ export const useAuthStore = create<AuthStore>()(
           return true;
         } catch (error) {
           set({ 
-            error: 'Failed to verify email', 
+            error: `Failed to verify email: ${error}`, 
             isLoading: false 
           });
           return false;

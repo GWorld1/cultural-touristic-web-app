@@ -10,6 +10,7 @@ export interface User {
   name: string;
   phone?: string;
   role: string;
+  bio?: string;
 }
 
 // Authentication request types
@@ -28,6 +29,7 @@ export interface RegisterRequest {
 export interface UpdateProfileRequest {
   name: string;
   phone?: string;
+  bio?: string;
 }
 
 export interface PasswordResetRequest {
@@ -80,6 +82,7 @@ export interface AuthError {
 // Authentication state types
 export interface AuthState {
   user: User | null;
+  UserProfile: User | null;
   token: string | null;
   sessionId: string | null;
   isAuthenticated: boolean;

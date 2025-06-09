@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Grid, Settings, Bookmark, PaletteIcon as Panorama, Heart, MessageCircle } from "lucide-react"
+import { Grid, Settings, Bookmark, PaletteIcon as Panorama, Heart, MessageCircle, CheckCircle, AlertCircle } from "lucide-react"
 import Navigation from "@/components/navigation"
 import ProtectedRoute from "@/components/auth/ProtectedRoute"
 import { useAuth } from "@/lib/contexts/auth"
@@ -51,12 +51,26 @@ const demoSavedPosts: DemoPost[] = [
 
 function ProfilePageContent() {
   const [activeTab, setActiveTab] = useState("posts")
-  const { user } = useAuth()
+  const { user,UserProfile, updateProfile, isLoading, error, clearError } = useAuth()
   const [editForm, setEditForm] = useState({
-    fullName: user?.name || "",
-    bio: "🌍 Travel enthusiast | 📸 Tourism photographer\nExploring the beautiful landscapes of Cameroon 🇨🇲",
+    fullName: UserProfile?.name || "",
+    bio: UserProfile?.bio,
+    phone: UserProfile?.phone || "",
   })
   const [isEditOpen, setIsEditOpen] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  console.log('UserProfile changed:', UserProfile)
+  // Update form when user data changes
+  useEffect(() => {
+    if (UserProfile) {
+      
+      setEditForm({
+        fullName: UserProfile.name || "",
+        bio: UserProfile.bio || "",
+        phone: UserProfile.phone || "",
+      })
+    }
+  }, [UserProfile])
 
   // Use demo data for posts
   const userPosts = demoUserPosts
@@ -65,10 +79,39 @@ function ProfilePageContent() {
   // Calculate total likes for user's posts
   const totalLikes = userPosts.reduce((sum, post) => sum + post.likes, 0)
 
-  const handleSaveProfile = () => {
-    // Demo functionality - just close the dialog
-    setIsEditOpen(false)
-    // In a real app, this would update the user profile via API
+  const handleSaveProfile = async () => {
+    // Clear any previous errors
+    clearError()
+    setSaveStatus('idle')
+
+    // Validate required fields
+    if (!editForm.fullName.trim()) {
+      setSaveStatus('error')
+      return
+    }
+
+    try {
+      // Call the updateProfile function from auth store
+      const success = await updateProfile({
+        name: editForm.fullName.trim(),
+        bio: editForm.bio.trim() || undefined,
+        phone: editForm.phone.trim() || undefined,
+      })
+
+      if (success) {
+        setSaveStatus('success')
+        // Close dialog after a brief delay to show success message
+        setTimeout(() => {
+          setIsEditOpen(false)
+          setSaveStatus('idle')
+        }, 1500)
+      } else {
+        setSaveStatus('error')
+      }
+    } catch (err) {
+      console.error('Failed to update profile:', err)
+      setSaveStatus('error')
+    }
   }
 
   const postsToShow = activeTab === "posts" ? userPosts : savedPosts
@@ -84,7 +127,7 @@ function ProfilePageContent() {
       <main className="max-w-4xl mx-auto py-6 px-4 pb-20 md:pb-6">
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
           <p className="text-blue-700 text-sm text-center">
-            <strong>Demo Mode:</strong> Profile data and posts are static demonstrations. Changes won't be saved.
+            <strong>Profile Updates:</strong> You can now edit and save your profile information. Posts are still static demonstrations.
           </p>
         </div>
 
@@ -93,15 +136,15 @@ function ProfilePageContent() {
             {/* Profile Header */}
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-8">
               <Avatar className="w-32 h-32 border-4 border-primary-200">
-                <AvatarImage src="/placeholder.svg?height=128&width=128" alt="Profile" />
+                <AvatarImage src={UserProfile?.avatar_url || "/placeholder.svg"} alt="Profile" />
                 <AvatarFallback className="bg-primary-500 text-white text-2xl">
-                  {user.name?.[0]?.toUpperCase() }
+                  {UserProfile?.name?.[0]?.toUpperCase() }
                 </AvatarFallback>
               </Avatar>
 
               <div className="flex-1 text-center md:text-left">
                 <div className="flex flex-col md:flex-row items-center gap-4 mb-4">
-                  <h1 className="text-2xl font-bold text-secondary-800">{user.email?.split('@')[0] || 'User'}</h1>
+                  <h1 className="text-2xl font-bold text-secondary-800">{UserProfile?.name || 'User'}</h1>
 
                   <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
                     <DialogTrigger asChild>
@@ -115,13 +158,40 @@ function ProfilePageContent() {
                         <DialogTitle className="text-secondary-800">Edit Profile</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4">
+                        {/* Status Messages */}
+                        {saveStatus === 'success' && (
+                          <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <span className="text-green-700 text-sm">Profile updated successfully!</span>
+                          </div>
+                        )}
+                        {saveStatus === 'error' && (
+                          <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <AlertCircle className="h-4 w-4 text-red-600" />
+                            <span className="text-red-700 text-sm">
+                              {error || (!editForm.fullName.trim() ? 'Full name is required' : 'Failed to update profile. Please try again.')}
+                            </span>
+                          </div>
+                        )}
+
                         <div>
-                          <label className="text-secondary-800 font-semibold">Full Name</label>
+                          <label className="text-secondary-800 font-semibold">Full Name *</label>
                           <Input
                             value={editForm.fullName}
                             onChange={(e) => setEditForm((prev) => ({ ...prev, fullName: e.target.value }))}
                             className="bg-white border-primary-200 focus:border-primary-400"
                             placeholder="Enter your full name"
+                            disabled={isLoading}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-secondary-800 font-semibold">Phone</label>
+                          <Input
+                            value={editForm.phone}
+                            onChange={(e) => setEditForm((prev) => ({ ...prev, phone: e.target.value }))}
+                            className="bg-white border-primary-200 focus:border-primary-400"
+                            placeholder="Enter your phone number"
+                            disabled={isLoading}
                           />
                         </div>
                         <div>
@@ -132,19 +202,26 @@ function ProfilePageContent() {
                             className="bg-white border-primary-200 focus:border-primary-400"
                             placeholder="Tell us about yourself..."
                             rows={3}
+                            disabled={isLoading}
                           />
                         </div>
                         <div className="flex gap-2">
                           <Button
                             onClick={handleSaveProfile}
-                            className="flex-1 bg-primary-500 hover:bg-primary-600 text-white"
+                            className="flex-1 bg-primary-500 hover:bg-primary-600 text-white disabled:opacity-50"
+                            disabled={isLoading || saveStatus === 'success'}
                           >
-                            Save Changes
+                            {isLoading ? 'Saving...' : saveStatus === 'success' ? 'Saved!' : 'Save Changes'}
                           </Button>
                           <Button
                             variant="outline"
-                            onClick={() => setIsEditOpen(false)}
+                            onClick={() => {
+                              setIsEditOpen(false)
+                              setSaveStatus('idle')
+                              clearError()
+                            }}
                             className="border-primary-300 text-primary-700"
+                            disabled={isLoading}
                           >
                             Cancel
                           </Button>
@@ -167,7 +244,7 @@ function ProfilePageContent() {
 
                 <div className="text-secondary-700">
                   <p className="font-semibold">{user.name}</p>
-                  <p className="whitespace-pre-line">{editForm.bio}</p>
+                  <p className="whitespace-pre-line mt-2">{user.bio || editForm.bio}</p>
                 </div>
               </div>
             </div>
