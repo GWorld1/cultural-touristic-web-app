@@ -3,23 +3,23 @@
 import type React from "react"
 
 import { useState, useRef } from "react"
-import { useRouter } from "next/navigation"
+
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
-import { X, MapPin, PaletteIcon as Panorama } from "lucide-react"
+import { X, MapPin, PaletteIcon as Panorama, CheckCircle } from "lucide-react"
 import Navigation from "@/components/navigation"
-import { apiClient } from "@/lib/api-client"
+import ProtectedRoute from "@/components/auth/ProtectedRoute"
 
-export default function UploadPage() {
+function UploadPageContent() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [caption, setCaption] = useState("")
   const [location, setLocation] = useState("")
   const [isUploading, setIsUploading] = useState(false)
+  const [uploadSuccess, setUploadSuccess] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const router = useRouter()
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -43,22 +43,17 @@ export default function UploadPage() {
     // Simulate upload process
     await new Promise((resolve) => setTimeout(resolve, 2000))
 
-    // In production, you would upload the image to cloud storage first
-    const response = await apiClient.createPost(selectedImage, caption, location)
+    // Demo success - show success message
+    setIsUploading(false)
+    setUploadSuccess(true)
 
-    if (response.data) {
-      // Reset form
+    // Reset form after showing success
+    setTimeout(() => {
       setSelectedImage(null)
       setCaption("")
       setLocation("")
-      setIsUploading(false)
-
-      // Navigate back to home
-      router.push("/")
-    } else {
-      setIsUploading(false)
-      alert("Failed to upload post")
-    }
+      setUploadSuccess(false)
+    }, 3000)
   }
 
   const removeImage = () => {
@@ -73,14 +68,29 @@ export default function UploadPage() {
       <Navigation />
 
       <main className="max-w-2xl mx-auto py-6 px-4 pb-20 md:pb-6">
-        <Card className="bg-white/90 backdrop-blur-sm border-primary-100 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-center text-secondary-800 flex items-center justify-center gap-2">
-              <Panorama className="h-6 w-6 text-primary-600" />
-              Share Your Panoramic View
-            </CardTitle>
-            <p className="text-center text-secondary-600 text-sm">Upload only panoramic images (360° views)</p>
-          </CardHeader>
+        {uploadSuccess ? (
+          <Card className="bg-white/90 backdrop-blur-sm border-primary-100 shadow-lg">
+            <CardContent className="text-center py-12">
+              <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-secondary-800 mb-2">Upload Successful!</h2>
+              <p className="text-secondary-600 mb-4">Your panoramic post has been shared successfully.</p>
+              <p className="text-sm text-secondary-500">This is a demo - no actual upload occurred.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="bg-white/90 backdrop-blur-sm border-primary-100 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-center text-secondary-800 flex items-center justify-center gap-2">
+                <Panorama className="h-6 w-6 text-primary-600" />
+                Share Your Panoramic View
+              </CardTitle>
+              <p className="text-center text-secondary-600 text-sm">Upload only panoramic images (360° views)</p>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
+                <p className="text-blue-700 text-sm text-center">
+                  <strong>Demo Mode:</strong> This is a UI demonstration. No actual upload will occur.
+                </p>
+              </div>
+            </CardHeader>
 
           <CardContent className="space-y-6">
             {/* Panoramic Image Upload */}
@@ -156,11 +166,20 @@ export default function UploadPage() {
               disabled={!selectedImage || !caption.trim() || !location.trim() || isUploading}
               className="w-full bg-primary-500 hover:bg-primary-600 text-white font-semibold py-3 shadow-lg"
             >
-              {isUploading ? "Uploading..." : "Share Panoramic Post"}
+              {isUploading ? "Uploading..." : "Share Panoramic Post (Demo)"}
             </Button>
           </CardContent>
         </Card>
+        )}
       </main>
     </div>
+  )
+}
+
+export default function UploadPage() {
+  return (
+    <ProtectedRoute>
+      <UploadPageContent />
+    </ProtectedRoute>
   )
 }

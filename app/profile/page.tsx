@@ -10,72 +10,98 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Grid, Settings, Bookmark, PaletteIcon as Panorama, Heart, MessageCircle } from "lucide-react"
 import Navigation from "@/components/navigation"
-import { getPosts, getSavedPosts, getCurrentUser, updateCurrentUser } from "@/lib/posts-store"
+import ProtectedRoute from "@/components/auth/ProtectedRoute"
+import { useAuth } from "@/lib/contexts/auth"
 
-export default function ProfilePage() {
+// Static demo data for profile
+interface DemoPost {
+  id: number
+  image: string
+  caption: string
+  likes: number
+  comments: Array<{ id: number; text: string }>
+}
+
+const demoUserPosts: DemoPost[] = [
+  {
+    id: 1,
+    image: "/placeholder.svg?height=400&width=400",
+    caption: "Amazing sunset at Mount Cameroon! 🌅",
+    likes: 234,
+    comments: [{ id: 1, text: "Beautiful!" }],
+  },
+  {
+    id: 2,
+    image: "/placeholder.svg?height=400&width=400",
+    caption: "Traditional architecture in Bafoussam",
+    likes: 156,
+    comments: [],
+  },
+]
+
+const demoSavedPosts: DemoPost[] = [
+  {
+    id: 3,
+    image: "/placeholder.svg?height=400&width=400",
+    caption: "Kribi Beach panoramic view",
+    likes: 89,
+    comments: [{ id: 2, text: "Love this place!" }],
+  },
+]
+
+function ProfilePageContent() {
   const [activeTab, setActiveTab] = useState("posts")
-  const [user, setUser] = useState(getCurrentUser())
+  const { user } = useAuth()
   const [editForm, setEditForm] = useState({
-    fullName: user.fullName || "",
-    bio: user.bio || "",
+    fullName: user?.name || "",
+    bio: "🌍 Travel enthusiast | 📸 Tourism photographer\nExploring the beautiful landscapes of Cameroon 🇨🇲",
   })
   const [isEditOpen, setIsEditOpen] = useState(false)
 
-  // Get posts with proper error handling
-  const userPosts = (() => {
-    try {
-      const posts = getPosts()
-      return Array.isArray(posts) ? posts.filter((post) => post.user.username === user.username) : []
-    } catch (error) {
-      console.error("Error fetching user posts:", error)
-      return []
-    }
-  })()
-
-  // Get saved posts with proper error handling
-  const savedPosts = (() => {
-    try {
-      const posts = getSavedPosts()
-      return Array.isArray(posts) ? posts : []
-    } catch (error) {
-      console.error("Error fetching saved posts:", error)
-      return []
-    }
-  })()
+  // Use demo data for posts
+  const userPosts = demoUserPosts
+  const savedPosts = demoSavedPosts
 
   // Calculate total likes for user's posts
   const totalLikes = userPosts.reduce((sum, post) => sum + post.likes, 0)
 
   const handleSaveProfile = () => {
-    const updatedUser = updateCurrentUser({
-      fullName: editForm.fullName,
-      bio: editForm.bio,
-    })
-    setUser(updatedUser)
+    // Demo functionality - just close the dialog
     setIsEditOpen(false)
+    // In a real app, this would update the user profile via API
   }
 
   const postsToShow = activeTab === "posts" ? userPosts : savedPosts
+
+  if (!user) {
+    return <div>Loading...</div>
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-accent-50">
       <Navigation />
 
       <main className="max-w-4xl mx-auto py-6 px-4 pb-20 md:pb-6">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+          <p className="text-blue-700 text-sm text-center">
+            <strong>Demo Mode:</strong> Profile data and posts are static demonstrations. Changes won't be saved.
+          </p>
+        </div>
+
         <Card className="bg-white/90 backdrop-blur-sm border-primary-100 shadow-lg">
           <CardContent className="p-6">
             {/* Profile Header */}
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-8">
               <Avatar className="w-32 h-32 border-4 border-primary-200">
-                <AvatarImage src={user.avatar || "/placeholder.svg"} alt="Profile" />
+                <AvatarImage src="/placeholder.svg?height=128&width=128" alt="Profile" />
                 <AvatarFallback className="bg-primary-500 text-white text-2xl">
-                  {user.username[0].toUpperCase()}
+                  {user.name?.[0]?.toUpperCase() }
                 </AvatarFallback>
               </Avatar>
 
               <div className="flex-1 text-center md:text-left">
                 <div className="flex flex-col md:flex-row items-center gap-4 mb-4">
-                  <h1 className="text-2xl font-bold text-secondary-800">{user.username}</h1>
+                  <h1 className="text-2xl font-bold text-secondary-800">{user.email?.split('@')[0] || 'User'}</h1>
 
                   <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
                     <DialogTrigger asChild>
@@ -140,8 +166,8 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="text-secondary-700">
-                  <p className="font-semibold">{user.fullName}</p>
-                  <p className="whitespace-pre-line">{user.bio}</p>
+                  <p className="font-semibold">{user.name}</p>
+                  <p className="whitespace-pre-line">{editForm.bio}</p>
                 </div>
               </div>
             </div>
@@ -240,5 +266,13 @@ export default function ProfilePage() {
         </Card>
       </main>
     </div>
+  )
+}
+
+export default function ProfilePage() {
+  return (
+    <ProtectedRoute>
+      <ProfilePageContent />
+    </ProtectedRoute>
   )
 }

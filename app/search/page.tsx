@@ -7,7 +7,64 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Search, MapPin, User } from "lucide-react"
 import Navigation from "@/components/navigation"
-import { getPosts } from "@/lib/database/queries"
+import ProtectedRoute from "@/components/auth/ProtectedRoute"
+
+// Static demo data for search functionality
+interface DemoPost {
+  id: number
+  user: {
+    username: string
+    avatar: string
+  }
+  image: string
+  caption: string
+  location: string
+  likes: number
+  comments: Array<{ id: number; username: string; text: string; timeAgo: string }>
+  timeAgo: string
+}
+
+interface DemoUser {
+  username: string
+  avatar: string
+}
+
+const demoPosts: DemoPost[] = [
+  {
+    id: 1,
+    user: {
+      username: "traveler_jane",
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+    image: "/placeholder.svg?height=400&width=800",
+    caption: "Amazing sunset at Mount Cameroon! 🌅 #Cameroon #Tourism #Nature",
+    location: "Mount Cameroon, Cameroon",
+    likes: 234,
+    comments: [
+      { id: 1, username: "adventure_mike", text: "Absolutely stunning view! 😍", timeAgo: "1h" },
+    ],
+    timeAgo: "2h",
+  },
+  {
+    id: 2,
+    user: {
+      username: "cultural_explorer",
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+    image: "/placeholder.svg?height=400&width=800",
+    caption: "Traditional Bamileke architecture in the Western Highlands. #Culture #Architecture #Cameroon",
+    location: "Bafoussam, Cameroon",
+    likes: 156,
+    comments: [],
+    timeAgo: "1d",
+  },
+]
+
+const demoUsers: DemoUser[] = [
+  { username: "traveler_jane", avatar: "/placeholder.svg?height=40&width=40" },
+  { username: "cultural_explorer", avatar: "/placeholder.svg?height=40&width=40" },
+  { username: "adventure_mike", avatar: "/placeholder.svg?height=40&width=40" },
+]
 
 interface SearchResult {
   id: number
@@ -20,42 +77,15 @@ interface SearchResult {
   postCount?: number
 }
 
-export default function SearchPage() {
+function SearchPageContent() {
   const searchParams = useSearchParams()
   const initialQuery = searchParams.get("q") || ""
   const [searchQuery, setSearchQuery] = useState(initialQuery)
 
-  // Get posts with proper error handling
-  const allPosts = (() => {
-    try {
-      const posts = getPosts()
-      return Array.isArray(posts) ? posts : []
-    } catch (error) {
-      console.error("Error fetching posts:", error)
-      return []
-    }
-  })()
-
-  // Get unique users from posts with safety checks
-  const uniqueUsers = (() => {
-    try {
-      const userMap = new Map()
-      allPosts.forEach((post) => {
-        if (post.user && post.user.username) {
-          userMap.set(post.user.username, post.user)
-        }
-      })
-      return Array.from(userMap.values())
-    } catch (error) {
-      console.error("Error processing users:", error)
-      return []
-    }
-  })()
-
-  // Create search results
+  // Create search results from demo data
   const allResults: SearchResult[] = [
     // Posts
-    ...allPosts.map((post) => ({
+    ...demoPosts.map((post) => ({
       id: post.id,
       type: "post" as const,
       image: post.image,
@@ -65,14 +95,14 @@ export default function SearchPage() {
       location: post.location,
     })),
     // Users
-    ...uniqueUsers.map((user, index) => ({
+    ...demoUsers.map((user, index) => ({
       id: 1000 + index,
       type: "user" as const,
       image: user.avatar,
       title: user.username,
       username: user.username,
       avatar: user.avatar,
-      postCount: allPosts.filter((post) => post.user.username === user.username).length,
+      postCount: demoPosts.filter((post) => post.user.username === user.username).length,
     })),
     // Locations
     {
@@ -125,17 +155,12 @@ export default function SearchPage() {
 
   // If searching for a specific user, show their posts
   const userPosts = (() => {
-    try {
-      if (!searchQuery.trim()) return []
+    if (!searchQuery.trim()) return []
 
-      return allPosts.filter(
-        (post) =>
-          post.user && post.user.username && post.user.username.toLowerCase().includes(searchQuery.toLowerCase()),
-      )
-    } catch (error) {
-      console.error("Error filtering user posts:", error)
-      return []
-    }
+    return demoPosts.filter(
+      (post) =>
+        post.user && post.user.username && post.user.username.toLowerCase().includes(searchQuery.toLowerCase()),
+    )
   })()
 
   const isUserSearch = searchQuery.trim() && userPosts.length > 0 && filteredResults.some((r) => r.type === "user")
@@ -161,6 +186,11 @@ export default function SearchPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 bg-white/90 backdrop-blur-sm border-primary-200 focus:border-primary-400 text-secondary-800 placeholder:text-secondary-500"
             />
+          </div>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
+            <p className="text-blue-700 text-sm text-center">
+              <strong>Demo Mode:</strong> Search functionality uses static demo data for UI demonstration.
+            </p>
           </div>
         </div>
 
@@ -344,5 +374,13 @@ export default function SearchPage() {
         )}
       </main>
     </div>
+  )
+}
+
+export default function SearchPage() {
+  return (
+    <ProtectedRoute>
+      <SearchPageContent />
+    </ProtectedRoute>
   )
 }

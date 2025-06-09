@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -9,67 +9,168 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Heart, MessageCircle, Bookmark, MoreHorizontal, Send } from "lucide-react"
 import Navigation from "@/components/navigation"
-import { apiClient } from "@/lib/api-client"
-import type { PostWithDetails } from "@/lib/database/schema"
 import ProtectedRoute from "@/components/auth/ProtectedRoute"
 
+// Static demo data for UI demonstration
+interface DemoPost {
+  id: string
+  user: {
+    id: string
+    username: string
+    avatar_url: string
+    is_verified: boolean
+  }
+  image_url: string
+  caption: string
+  location: string
+  likes_count: number
+  comments_count: number
+  created_at: string
+  is_liked_by_current_user: boolean
+  is_saved_by_current_user: boolean
+  recent_comments: Array<{
+    id: string
+    text: string
+    created_at: string
+    user: {
+      id: string
+      username: string
+      avatar_url: string
+    }
+  }>
+}
+
+const demoPosts: DemoPost[] = [
+  {
+    id: "1",
+    user: {
+      id: "2",
+      username: "traveler_jane",
+      avatar_url: "/placeholder.svg?height=40&width=40",
+      is_verified: true,
+    },
+    image_url: "/placeholder.svg?height=400&width=800",
+    caption: "Amazing sunset at Mount Cameroon! 🌅 The panoramic view from the summit is absolutely breathtaking. #Cameroon #Tourism #Nature #360Photography",
+    location: "Mount Cameroon, Cameroon",
+    likes_count: 234,
+    comments_count: 12,
+    created_at: "2024-01-15T10:00:00Z",
+    is_liked_by_current_user: false,
+    is_saved_by_current_user: false,
+    recent_comments: [
+      {
+        id: "1",
+        text: "Absolutely stunning view! 😍",
+        created_at: "2024-01-15T10:30:00Z",
+        user: {
+          id: "3",
+          username: "adventure_mike",
+          avatar_url: "/placeholder.svg?height=40&width=40",
+        },
+      },
+      {
+        id: "2",
+        text: "The colors are incredible! What camera did you use?",
+        created_at: "2024-01-15T11:00:00Z",
+        user: {
+          id: "4",
+          username: "photo_lover",
+          avatar_url: "/placeholder.svg?height=40&width=40",
+        },
+      },
+    ],
+  },
+  {
+    id: "2",
+    user: {
+      id: "5",
+      username: "cultural_explorer",
+      avatar_url: "/placeholder.svg?height=40&width=40",
+      is_verified: false,
+    },
+    image_url: "/placeholder.svg?height=400&width=800",
+    caption: "Traditional Bamileke architecture in the Western Highlands. The intricate details and craftsmanship are remarkable! 🏛️ #Culture #Architecture #Cameroon",
+    location: "Bafoussam, Cameroon",
+    likes_count: 156,
+    comments_count: 8,
+    created_at: "2024-01-14T15:30:00Z",
+    is_liked_by_current_user: true,
+    is_saved_by_current_user: true,
+    recent_comments: [
+      {
+        id: "3",
+        text: "Beautiful cultural heritage! 🏛️",
+        created_at: "2024-01-14T16:00:00Z",
+        user: {
+          id: "6",
+          username: "heritage_fan",
+          avatar_url: "/placeholder.svg?height=40&width=40",
+        },
+      },
+    ],
+  },
+]
+
 function HomePageContent() {
-  const [posts, setPosts] = useState<PostWithDetails[]>([])
-  const [loading, setLoading] = useState(true)
+  const [posts, setPosts] = useState<DemoPost[]>(demoPosts)
   const [commentTexts, setCommentTexts] = useState<{ [key: string]: string }>({})
   const [showComments, setShowComments] = useState<{ [key: string]: boolean }>({})
   const router = useRouter()
 
-  useEffect(() => {
-    loadPosts()
-  }, [])
-
-  const loadPosts = async () => {
-    setLoading(true)
-    const response = await apiClient.getPosts()
-    if (response.data) {
-      setPosts(response.data.posts)
-    }
-    setLoading(false)
+  const handleLike = (postId: string) => {
+    // Demo functionality - toggle like state
+    setPosts((prev) =>
+      prev.map((post) =>
+        post.id === postId
+          ? {
+              ...post,
+              is_liked_by_current_user: !post.is_liked_by_current_user,
+              likes_count: post.is_liked_by_current_user ? post.likes_count - 1 : post.likes_count + 1,
+            }
+          : post,
+      ),
+    )
   }
 
-  const handleLike = async (postId: string) => {
-    const response = await apiClient.toggleLike(postId)
-    if (response.data) {
-      // Update local state
-      setPosts((prev) =>
-        prev.map((post) =>
-          post.id === postId
-            ? {
-                ...post,
-                is_liked_by_current_user: response.data.isLiked,
-                likes_count: response.data.isLiked ? post.likes_count + 1 : post.likes_count - 1,
-              }
-            : post,
-        ),
-      )
-    }
+  const handleSave = (postId: string) => {
+    // Demo functionality - toggle save state
+    setPosts((prev) =>
+      prev.map((post) =>
+        post.id === postId
+          ? { ...post, is_saved_by_current_user: !post.is_saved_by_current_user }
+          : post
+      ),
+    )
   }
 
-  const handleSave = async (postId: string) => {
-    const response = await apiClient.toggleSave(postId)
-    if (response.data) {
-      setPosts((prev) =>
-        prev.map((post) => (post.id === postId ? { ...post, is_saved_by_current_user: response.data.isSaved } : post)),
-      )
-    }
-  }
-
-  const handleAddComment = async (postId: string) => {
+  const handleAddComment = (postId: string) => {
     const text = commentTexts[postId]?.trim()
     if (!text) return
 
-    const response = await apiClient.addComment(postId, text)
-    if (response.data) {
-      // Reload posts to get updated comments
-      loadPosts()
-      setCommentTexts((prev) => ({ ...prev, [postId]: "" }))
+    // Demo functionality - add comment to local state
+    const newComment = {
+      id: Date.now().toString(),
+      text,
+      created_at: new Date().toISOString(),
+      user: {
+        id: "current_user",
+        username: "current_user",
+        avatar_url: "/placeholder.svg?height=40&width=40",
+      },
     }
+
+    setPosts((prev) =>
+      prev.map((post) =>
+        post.id === postId
+          ? {
+              ...post,
+              recent_comments: [...post.recent_comments, newComment],
+              comments_count: post.comments_count + 1,
+            }
+          : post,
+      ),
+    )
+    setCommentTexts((prev) => ({ ...prev, [postId]: "" }))
   }
 
   const toggleComments = (postId: string) => {
@@ -78,20 +179,6 @@ function HomePageContent() {
 
   const handleUsernameClick = (username: string) => {
     router.push(`/search?q=${encodeURIComponent(username)}`)
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-accent-50">
-        <Navigation />
-        <main className="max-w-2xl mx-auto py-6 px-4">
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mx-auto"></div>
-            <p className="text-secondary-600 mt-2">Loading posts...</p>
-          </div>
-        </main>
-      </div>
-    )
   }
 
   return (
@@ -240,7 +327,7 @@ function HomePageContent() {
                         value={commentTexts[post.id] || ""}
                         onChange={(e) => setCommentTexts((prev) => ({ ...prev, [post.id]: e.target.value }))}
                         className="flex-1 bg-white border-primary-200 focus:border-primary-400 text-sm"
-                        onKeyPress={(e) => e.key === "Enter" && handleAddComment(post.id)}
+                        onKeyDown={(e) => e.key === "Enter" && handleAddComment(post.id)}
                       />
                       <Button
                         size="sm"
