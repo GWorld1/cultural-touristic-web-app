@@ -11,8 +11,9 @@ import { Heart, MessageCircle, Bookmark, MoreHorizontal, Send } from "lucide-rea
 import Navigation from "@/components/navigation"
 import { apiClient } from "@/lib/api-client"
 import type { PostWithDetails } from "@/lib/database/schema"
+import ProtectedRoute from "@/components/auth/ProtectedRoute"
 
-export default function HomePage() {
+function HomePageContent() {
   const [posts, setPosts] = useState<PostWithDetails[]>([])
   const [loading, setLoading] = useState(true)
   const [commentTexts, setCommentTexts] = useState<{ [key: string]: string }>({})
@@ -260,5 +261,13 @@ export default function HomePage() {
         )}
       </main>
     </div>
+  )
+}
+
+export default function HomePage() {
+  return (
+    <ProtectedRoute>
+      <HomePageContent />
+    </ProtectedRoute>
   )
 }

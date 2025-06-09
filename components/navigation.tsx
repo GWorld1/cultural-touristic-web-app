@@ -1,12 +1,15 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { Home, Search, PlusSquare, User, Camera } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
+import { Home, Search, PlusSquare, User, Camera, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useAuth } from "@/lib/contexts/auth"
 
 export default function Navigation() {
   const pathname = usePathname()
+  const router = useRouter()
+  const { user, logout, isLoading } = useAuth()
 
   const navItems = [
     { href: "/", icon: Home, label: "Home" },
@@ -14,6 +17,11 @@ export default function Navigation() {
     { href: "/upload", icon: PlusSquare, label: "Upload" },
     { href: "/profile", icon: User, label: "Profile" },
   ]
+
+  const handleLogout = async () => {
+    await logout()
+    router.push('/auth/login')
+  }
 
   return (
     <nav className="bg-white/95 backdrop-blur-sm border-b border-primary-100 sticky top-0 z-50 shadow-sm">
@@ -49,12 +57,37 @@ export default function Navigation() {
                 </Link>
               )
             })}
+
+            {/* User Info and Logout */}
+            <div className="flex items-center space-x-3 ml-4 pl-4 border-l border-primary-200">
+              {user && (
+                <span className="text-sm text-secondary-600">
+                  Welcome, {user.name}
+                </span>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                disabled={isLoading}
+                className="text-secondary-600 hover:text-red-600 hover:bg-red-50"
+              >
+                <LogOut className="h-5 w-5" />
+                <span className="ml-2">Logout</span>
+              </Button>
+            </div>
           </div>
 
           {/* Mobile Navigation */}
           <div className="md:hidden">
-            <Button variant="ghost" size="sm" className="text-secondary-600">
-              <User className="h-5 w-5" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              disabled={isLoading}
+              className="text-secondary-600 hover:text-red-600"
+            >
+              <LogOut className="h-5 w-5" />
             </Button>
           </div>
         </div>
