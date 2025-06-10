@@ -94,8 +94,8 @@ function ProfilePageContent() {
       // Call the updateProfile function from auth store
       const success = await updateProfile({
         name: editForm.fullName.trim(),
-        bio: editForm.bio.trim() || undefined,
-        phone: editForm.phone.trim() || undefined,
+        bio: editForm.bio?.trim() || undefined,
+        phone: editForm.phone?.trim() || undefined,
       })
 
       if (success) {
