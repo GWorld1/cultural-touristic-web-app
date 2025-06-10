@@ -1,57 +1,26 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Image from "next/image"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Grid, Settings, Bookmark, PaletteIcon as Panorama, Heart, MessageCircle, CheckCircle, AlertCircle } from "lucide-react"
+import { Grid, Settings, CheckCircle, AlertCircle } from "lucide-react"
 import Navigation from "@/components/navigation"
 import ProtectedRoute from "@/components/auth/ProtectedRoute"
 import { useAuth } from "@/lib/contexts/auth"
+import { usePostsStore } from "@/lib/stores/posts"
+import PostFeed from "@/components/posts/PostFeed"
+import Link from "next/link"
 
-// Static demo data for profile
-interface DemoPost {
-  id: number
-  image: string
-  caption: string
-  likes: number
-  comments: Array<{ id: number; text: string }>
-}
 
-const demoUserPosts: DemoPost[] = [
-  {
-    id: 1,
-    image: "/placeholder.svg?height=400&width=400",
-    caption: "Amazing sunset at Mount Cameroon! 🌅",
-    likes: 234,
-    comments: [{ id: 1, text: "Beautiful!" }],
-  },
-  {
-    id: 2,
-    image: "/placeholder.svg?height=400&width=400",
-    caption: "Traditional architecture in Bafoussam",
-    likes: 156,
-    comments: [],
-  },
-]
-
-const demoSavedPosts: DemoPost[] = [
-  {
-    id: 3,
-    image: "/placeholder.svg?height=400&width=400",
-    caption: "Kribi Beach panoramic view",
-    likes: 89,
-    comments: [{ id: 2, text: "Love this place!" }],
-  },
-]
 
 function ProfilePageContent() {
-  const [activeTab, setActiveTab] = useState("posts")
-  const { user,UserProfile, updateProfile, isLoading, error, clearError } = useAuth()
+  const { user, UserProfile, updateProfile, isLoading, error, clearError } = useAuth()
+  const { userPosts, fetchUserPosts, loading: postsLoading } = usePostsStore()
+
   const [editForm, setEditForm] = useState({
     fullName: UserProfile?.name || "",
     bio: UserProfile?.bio,
@@ -59,11 +28,12 @@ function ProfilePageContent() {
   })
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle')
+
   console.log('UserProfile changed:', UserProfile)
+
   // Update form when user data changes
   useEffect(() => {
     if (UserProfile) {
-      
       setEditForm({
         fullName: UserProfile.name || "",
         bio: UserProfile.bio || "",
@@ -72,12 +42,15 @@ function ProfilePageContent() {
     }
   }, [UserProfile])
 
-  // Use demo data for posts
-  const userPosts = demoUserPosts
-  const savedPosts = demoSavedPosts
+  // Fetch user posts when component mounts or user changes
+  useEffect(() => {
+    if (user?.id) {
+      fetchUserPosts(user.id)
+    }
+  }, [user?.id, fetchUserPosts])
 
   // Calculate total likes for user's posts
-  const totalLikes = userPosts.reduce((sum, post) => sum + post.likes, 0)
+  const totalLikes = userPosts.reduce((sum, post) => sum + post.likesCount, 0)
 
   const handleSaveProfile = async () => {
     // Clear any previous errors
@@ -114,8 +87,6 @@ function ProfilePageContent() {
     }
   }
 
-  const postsToShow = activeTab === "posts" ? userPosts : savedPosts
-
   if (!user) {
     return <div>Loading...</div>
   }
@@ -125,20 +96,15 @@ function ProfilePageContent() {
       <Navigation />
 
       <main className="max-w-4xl mx-auto py-6 px-4 pb-20 md:pb-6">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
-          <p className="text-blue-700 text-sm text-center">
-            <strong>Profile Updates:</strong> You can now edit and save your profile information. Posts are still static demonstrations.
-          </p>
-        </div>
 
         <Card className="bg-white/90 backdrop-blur-sm border-primary-100 shadow-lg">
           <CardContent className="p-6">
             {/* Profile Header */}
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-8">
               <Avatar className="w-32 h-32 border-4 border-primary-200">
-                <AvatarImage src={UserProfile?.avatar_url || "/placeholder.svg"} alt="Profile" />
+                <AvatarImage src="/placeholder.svg" alt="Profile" />
                 <AvatarFallback className="bg-primary-500 text-white text-2xl">
-                  {UserProfile?.name?.[0]?.toUpperCase() }
+                  {UserProfile?.name?.[0]?.toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
 
@@ -243,100 +209,44 @@ function ProfilePageContent() {
                 </div>
 
                 <div className="text-secondary-700">
-                  <p className="font-semibold">{user.name}</p>
-                  <p className="whitespace-pre-line mt-2">{user.bio || editForm.bio}</p>
+                  <p className="font-semibold">{UserProfile?.email || user?.email}</p>
+                  {UserProfile?.bio && (
+                    <p className="whitespace-pre-line mt-2">{UserProfile.bio}</p>
+                  )}
+                  {UserProfile?.phone && (
+                    <p className="text-sm text-secondary-600 mt-1">📞 {UserProfile.phone}</p>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Posts Grid */}
+            {/* Posts Section */}
             <div className="border-t border-primary-200 pt-6">
-              <div className="flex justify-center mb-6 gap-4">
-                <Button
-                  variant={activeTab === "posts" ? "default" : "ghost"}
-                  className={
-                    activeTab === "posts"
-                      ? "bg-primary-500 hover:bg-primary-600 text-white"
-                      : "text-secondary-600 hover:text-secondary-800 hover:bg-primary-50"
-                  }
-                  onClick={() => setActiveTab("posts")}
+              <div className="flex justify-center items-center mb-6 gap-4">
+                <div className="flex items-center gap-2">
+                  <Grid className="h-5 w-5 text-primary-600" />
+                  <h3 className="text-lg font-semibold text-secondary-800">Posts</h3>
+                </div>
+                <Link
+                  href="/upload"
+                  className="inline-flex items-center space-x-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors text-sm"
                 >
-                  <Grid className="h-4 w-4 mr-2" />
-                  POSTS
-                </Button>
-                <Button
-                  variant={activeTab === "saved" ? "default" : "ghost"}
-                  className={
-                    activeTab === "saved"
-                      ? "bg-primary-500 hover:bg-primary-600 text-white"
-                      : "text-secondary-600 hover:text-secondary-800 hover:bg-primary-50"
-                  }
-                  onClick={() => setActiveTab("saved")}
-                >
-                  <Bookmark className="h-4 w-4 mr-2" />
-                  SAVED ({savedPosts.length})
-                </Button>
+                  <span>Create New Post</span>
+                </Link>
               </div>
 
-              {postsToShow.length === 0 ? (
+              {/* User Posts Feed */}
+              {postsLoading && userPosts.length === 0 ? (
                 <div className="text-center py-12">
-                  <div className="text-secondary-500 mb-2">
-                    {activeTab === "posts" ? (
-                      <>
-                        <Grid className="h-12 w-12 mx-auto mb-4" />
-                        <p>No posts yet</p>
-                        <p className="text-sm">Share your first panoramic view!</p>
-                      </>
-                    ) : (
-                      <>
-                        <Bookmark className="h-12 w-12 mx-auto mb-4" />
-                        <p>No saved posts</p>
-                        <p className="text-sm">Save posts by tapping the bookmark icon</p>
-                      </>
-                    )}
-                  </div>
+                  <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading posts...</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-3 gap-1 md:gap-4">
-                  {postsToShow.map((post) => (
-                    <div
-                      key={post.id}
-                      className="relative aspect-square group cursor-pointer"
-                      onClick={() => {
-                        if (activeTab === "saved") {
-                          // Navigate to individual post page for saved posts
-                          window.location.href = `/post/${post.id}`
-                        }
-                      }}
-                    >
-                      <Image
-                        src={post.image || "/placeholder.svg"}
-                        alt={`Post ${post.id}`}
-                        fill
-                        className="object-cover rounded-lg group-hover:opacity-75 transition-opacity"
-                      />
-                      <div className="absolute top-2 right-2 bg-primary-500 text-white p-1 rounded-full">
-                        <Panorama className="h-3 w-3" />
-                      </div>
-                      {/* Overlay with stats on hover */}
-                      <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                        <div className="text-white text-center">
-                          <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-1">
-                              <Heart className="h-4 w-4 fill-current" />
-                              <span className="text-sm">{post.likes}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <MessageCircle className="h-4 w-4 fill-current" />
-                              <span className="text-sm">{post.comments.length}</span>
-                            </div>
-                          </div>
-                          {activeTab === "saved" && <p className="text-xs mt-1 opacity-75">Click to view</p>}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <PostFeed
+                  userId={user?.id}
+                  showCreateButton={false}
+                  className="space-y-4"
+                />
               )}
             </div>
           </CardContent>

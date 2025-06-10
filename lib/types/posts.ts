@@ -212,6 +212,34 @@ export interface LikeState {
   error: string | null;
 }
 
+// Search types
+export interface SearchRequest {
+  page?: number;
+  limit?: number;
+  tags?: string[] | string;
+  location?: string;
+  city?: string;
+  country?: string;
+  sortBy?: 'newest' | 'oldest' | 'popular';
+}
+
+export interface SearchResponse {
+  success: true;
+  data: {
+    posts: Post[];
+    pagination: Pagination;
+    searchParams: SearchRequest;
+  };
+}
+
+export interface SearchState {
+  searchResults: Post[];
+  searchLoading: boolean;
+  searchError: string | null;
+  searchPagination: Pagination | null;
+  lastSearchParams: SearchRequest | null;
+}
+
 // Store actions
 export interface PostActions {
   fetchPosts: (page?: number, limit?: number, userId?: string) => Promise<void>;
@@ -219,6 +247,8 @@ export interface PostActions {
   createPost: (postData: CreatePostRequest) => Promise<boolean>;
   updatePost: (postId: string, postData: UpdatePostRequest) => Promise<boolean>;
   deletePost: (postId: string) => Promise<boolean>;
+  searchPosts: (searchParams: SearchRequest) => Promise<void>;
+  clearSearchResults: () => void;
   clearError: () => void;
   setLoading: (loading: boolean) => void;
 }

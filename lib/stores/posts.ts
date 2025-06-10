@@ -11,6 +11,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { postsService } from '../api/posts';
 import { likesService } from '../api/likes';
 import { commentsService } from '../api/comments';
+import { searchService } from '../api/search';
 import type {
   Post,
   Comment,
@@ -18,6 +19,7 @@ import type {
   UpdatePostRequest,
   CreateCommentRequest,
   UpdateCommentRequest,
+  SearchRequest,
   Pagination,
   PostStore,
   CommentStore,
@@ -32,23 +34,30 @@ interface PostsState {
   posts: Post[];
   currentPost: Post | null;
   userPosts: Post[];
-  
+
+  // Search data
+  searchResults: Post[];
+  searchLoading: boolean;
+  searchError: string | null;
+  searchPagination: Pagination | null;
+  lastSearchParams: SearchRequest | null;
+
   // Comments data
   comments: Record<string, Comment[]>; // postId -> comments
-  
+
   // Likes data
   likedPosts: Set<string>;
-  
+
   // Loading states
   loading: boolean;
   commentsLoading: boolean;
   likesLoading: boolean;
-  
+
   // Error states
   error: string | null;
   commentsError: string | null;
   likesError: string | null;
-  
+
   // Pagination
   pagination: Pagination | null;
   commentsPagination: Record<string, Pagination>; // postId -> pagination
@@ -62,17 +71,23 @@ interface PostsActions {
   createPost: (postData: CreatePostRequest) => Promise<boolean>;
   updatePost: (postId: string, postData: UpdatePostRequest) => Promise<boolean>;
   deletePost: (postId: string) => Promise<boolean>;
-  
+
+  // Search actions
+  searchPosts: (searchParams: SearchRequest) => Promise<void>;
+  loadMoreSearchResults: (searchParams: SearchRequest) => Promise<void>;
+  clearSearchResults: () => void;
+  clearSearchError: () => void;
+
   // Comment actions
   fetchComments: (postId: string, page?: number, limit?: number) => Promise<void>;
   addComment: (postId: string, commentData: CreateCommentRequest) => Promise<boolean>;
   updateComment: (postId: string, commentId: string, commentData: UpdateCommentRequest) => Promise<boolean>;
   deleteComment: (postId: string, commentId: string) => Promise<boolean>;
-  
+
   // Like actions
   toggleLike: (postId: string) => Promise<boolean>;
   checkLikeStatus: (postId: string) => Promise<void>;
-  
+
   // Utility actions
   clearError: () => void;
   clearCommentsError: () => void;
@@ -94,6 +109,11 @@ export const usePostsStore = create<PostsStore>()(
       posts: [],
       currentPost: null,
       userPosts: [],
+      searchResults: [],
+      searchLoading: false,
+      searchError: null,
+      searchPagination: null,
+      lastSearchParams: null,
       comments: {},
       likedPosts: new Set(),
       loading: false,
@@ -482,6 +502,80 @@ export const usePostsStore = create<PostsStore>()(
           console.warn('Failed to check like status:', error);
         }
       },
+
+      // Search actions
+      searchPosts: async (searchParams: SearchRequest) => {
+        set({ searchLoading: true, searchError: null, lastSearchParams: searchParams });
+
+        try {
+          const response = await searchService.searchPosts(searchParams);
+
+          if (response.data) {
+            set({
+              searchResults: response.data.data.posts,
+              searchPagination: response.data.data.pagination,
+              searchLoading: false,
+            });
+          } else {
+            set({
+              searchError: response.error || 'Failed to search posts',
+              searchLoading: false,
+            });
+          }
+        } catch (error) {
+          set({
+            searchError: 'An unexpected error occurred while searching posts',
+            searchLoading: false,
+          });
+        }
+      },
+
+      loadMoreSearchResults: async (searchParams: SearchRequest) => {
+        const { searchPagination, searchResults } = get();
+
+        if (!searchPagination?.hasNextPage) {
+          return;
+        }
+
+        set({ searchLoading: true, searchError: null });
+
+        try {
+          const nextPageParams = {
+            ...searchParams,
+            page: (searchPagination.page || 1) + 1,
+          };
+
+          const response = await searchService.searchPosts(nextPageParams);
+
+          if (response.data) {
+            set({
+              searchResults: [...searchResults, ...response.data.data.posts],
+              searchPagination: response.data.data.pagination,
+              lastSearchParams: nextPageParams,
+              searchLoading: false,
+            });
+          } else {
+            set({
+              searchError: response.error || 'Failed to load more search results',
+              searchLoading: false,
+            });
+          }
+        } catch (error) {
+          set({
+            searchError: 'An unexpected error occurred while loading more search results',
+            searchLoading: false,
+          });
+        }
+      },
+
+      clearSearchResults: () => set({
+        searchResults: [],
+        searchPagination: null,
+        lastSearchParams: null,
+        searchError: null,
+      }),
+
+      clearSearchError: () => set({ searchError: null }),
 
       // Utility actions
       clearError: () => set({ error: null }),
