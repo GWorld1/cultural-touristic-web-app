@@ -26,7 +26,7 @@ class LikesService {
   constructor() {
     // Create axios instance with base configuration
     this.api = axios.create({
-      baseURL: 'http://localhost:5000/api/posts',
+      baseURL: `${process.env.NEXT_PUBLIC_LIKE_SERVICE_URL}/api/posts`,
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',
@@ -146,7 +146,7 @@ class LikesService {
   /**
    * Get posts liked by a user
    */
-  async getUserLikedPosts(userId: string, page = 1, limit = 20): Promise<ApiResponse<any>> {
+  async getUserLikedPosts(userId: string, page = 1, limit = 20): Promise<ApiResponse<LikesResponse>> {
     try {
       const params = new URLSearchParams({
         page: page.toString(),

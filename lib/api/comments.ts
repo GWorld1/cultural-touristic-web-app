@@ -9,7 +9,6 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
 import { authService } from './auth';
 import type {
-  Comment,
   CreateCommentRequest,
   UpdateCommentRequest,
   CommentResponse,
@@ -27,7 +26,7 @@ class CommentsService {
   constructor() {
     // Create axios instance with base configuration
     this.api = axios.create({
-      baseURL: 'http://localhost:5000/api/posts',
+      baseURL: `${process.env.NEXT_PUBLIC_COMMENT_SERVICE_URL}/api/posts`,
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',

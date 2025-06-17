@@ -12,17 +12,14 @@ import type {
   LoginRequest,
   RegisterRequest,
   UpdateProfileRequest,
-  PasswordResetRequest,
   PasswordResetCompleteRequest,
   EmailVerificationRequest,
-  LogoutRequest,
   AuthResponse,
   RegisterResponse,
   UserResponse,
   MessageResponse,
   AuthError,
   ApiResponse,
-  User
 } from '../types/auth';
 
 /**
@@ -36,7 +33,7 @@ class AuthService {
   constructor() {
     // Create axios instance with base configuration
     this.api = axios.create({
-      baseURL: 'http://localhost:5000/api/auth',
+      baseURL: `${process.env.NEXT_PUBLIC_AUTH_SERVICE_URL}/api/auth`,
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',

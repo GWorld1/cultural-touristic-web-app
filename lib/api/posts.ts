@@ -9,14 +9,12 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
 import { authService } from './auth';
 import type {
-  Post,
   CreatePostRequest,
   UpdatePostRequest,
   PostResponse,
   PostsResponse,
   PostError,
   ApiResponse,
-  Pagination
 } from '../types/posts';
 
 /**
@@ -28,7 +26,7 @@ class PostsService {
   constructor() {
     // Create axios instance with base configuration
     this.api = axios.create({
-      baseURL: 'http://localhost:5000/api/posts',
+      baseURL: `${process.env.NEXT_PUBLIC_POST_SERVICE_URL}/api/posts`,
       timeout: 30000, // Longer timeout for file uploads
       headers: {
         'Content-Type': 'application/json',

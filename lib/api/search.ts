@@ -24,7 +24,7 @@ class SearchService {
   constructor() {
     // Create axios instance with base configuration
     this.api = axios.create({
-      baseURL: 'http://localhost:5000/api/posts',
+      baseURL: `${process.env.NEXT_PUBLIC_POST_SERVICE_URL}/api/posts`,
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',
