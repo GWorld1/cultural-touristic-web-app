@@ -213,9 +213,9 @@ function ProfilePageContent() {
                   {UserProfile?.bio && (
                     <p className="whitespace-pre-line mt-2">{UserProfile.bio}</p>
                   )}
-                  {UserProfile?.phone && (
+                  {/* {UserProfile?.phone && (
                     <p className="text-sm text-secondary-600 mt-1">📞 {UserProfile.phone}</p>
-                  )}
+                  )} */}
                 </div>
               </div>
             </div>

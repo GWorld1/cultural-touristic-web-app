@@ -27,7 +27,6 @@ interface PanoramicViewerProps {
  */
 export const PanoramicViewer: React.FC<PanoramicViewerProps> = ({
   imageUrl,
-  alt = '360° Panoramic View',
   className = '',
   height = '400px',
   autoRotate = false,
@@ -46,7 +45,7 @@ export const PanoramicViewer: React.FC<PanoramicViewerProps> = ({
     const loadAFrame = async () => {
       try {
         // Check if A-Frame is already loaded
-        if (typeof window !== 'undefined' && (window as any).AFRAME) {
+        if (typeof window !== 'undefined' && (window).AFRAME) {
           setAframeLoaded(true);
           return;
         }
@@ -83,6 +82,7 @@ export const PanoramicViewer: React.FC<PanoramicViewerProps> = ({
     const img = new Image();
     img.onload = handleImageLoad;
     img.onerror = handleImageError;
+   
     img.src = imageUrl;
 
     return () => {

@@ -94,7 +94,13 @@ export default function SignupPage() {
         password: "",
         phone: "",
       })
-    }
+
+      // Optionally redirect to login or home page
+      setTimeout(() => {
+        router.push('/auth/login')
+      }, 5000)
+
+    } 
   }
 
   return (

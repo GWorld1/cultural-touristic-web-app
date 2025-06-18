@@ -84,6 +84,8 @@ export const CreatePost: React.FC<CreatePostProps> = ({
     // Create preview URL
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
+    console.log('Selected file:', file);
+    console.log('Preview URL:', url);
   };
 
   const handleRemoveFile = () => {
@@ -231,6 +233,7 @@ export const CreatePost: React.FC<CreatePostProps> = ({
                 </p>
               </div>
             )}
+            <img src={previewUrl ? previewUrl : ""}/>
 
             <input
               ref={fileInputRef}

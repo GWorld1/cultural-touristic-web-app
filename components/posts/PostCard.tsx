@@ -40,7 +40,7 @@ export const PostCard: React.FC<PostCardProps> = ({
     likesLoading 
   } = usePostsStore();
   
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
 
   // Check if post is liked on mount
   useEffect(() => {

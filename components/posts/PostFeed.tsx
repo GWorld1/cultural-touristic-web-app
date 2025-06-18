@@ -190,7 +190,7 @@ export const PostFeed: React.FC<PostFeedProps> = ({
       {/* Header with refresh button */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-gray-900">
-          {isUserFeed ? 'Posts' : '360° Experiences'}
+          {isUserFeed ? 'Posts' : 'Feed'}
         </h2>
         
         <div className="flex items-center space-x-3">
