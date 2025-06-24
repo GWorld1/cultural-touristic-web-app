@@ -30,7 +30,6 @@ interface CommentItemProps {
  */
 const CommentItem: React.FC<CommentItemProps> = ({
   comment,
-  postId,
   onEdit,
   onDelete,
 }) => {

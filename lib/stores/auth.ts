@@ -1,4 +1,3 @@
-import { UserProfile } from './../database/schema';
 /**
  * Authentication Store using Zustand
  * 
@@ -12,7 +11,6 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { authService } from '../api/auth';
 import type {
   AuthStore,
-  User,
   LoginRequest,
   RegisterRequest,
   UpdateProfileRequest,
