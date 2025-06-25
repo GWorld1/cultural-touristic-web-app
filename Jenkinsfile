@@ -24,7 +24,7 @@ pipeline {
         stage('Build Frontend Application') {
             steps {
                 echo 'Building frontend application.'
-                sh 'npm run build'
+                sh 'npx next build'
             }
         }
 
