@@ -21,12 +21,12 @@ pipeline {
             }
         }
 
-        stage('Build Frontend Application') {
-            steps {
-                echo 'Building frontend application.'
-                sh 'npx next build'
-            }
-        }
+        //stage('Build Frontend Application') {
+          //  steps {
+            //    echo 'Building frontend application.'
+              //  sh 'npx next build'
+            //}
+        //}
 
         stage('Test Frontend Application') {
             steps {
