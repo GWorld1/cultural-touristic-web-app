@@ -14,12 +14,15 @@ pipeline {
             }
         }
 
-        stage('Install Frontend Dependencies') {
+       stage('Install Frontend Dependencies') {
             steps {
                 echo 'Cleaning node_modules and package-lock.json...'
-                // Clean up previous installation artifacts to prevent ENOTEMPTY errors
                 sh 'rm -rf node_modules'
-                sh 'rm -f package-lock.json' // Also remove package-lock.json to force a fresh resolution
+                sh 'rm -f package-lock.json'
+
+                echo 'Clearing npm cache forcefully...'
+                // ADD THIS LINE: This aggressively clears the npm cache.
+                sh 'npm cache clean --force'
 
                 echo 'Installing frontend dependencies.'
                 sh 'npm install'
